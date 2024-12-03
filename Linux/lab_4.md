@@ -55,14 +55,14 @@ sudo nano /etc/bind/zones/db.abonazel.com
 Add this content:
 ```bash
  $TTL    604800
-@       IN      SOA     memo.com. root.memo.com. (
+@       IN      SOA     abonazel.com. root.abonazel.com. (
                      2023121001         ; Serial
                          604800         ; Refresh
                           86400         ; Retry
                         2419200         ; Expire
                          604800 )       ; Negative Cache TTL
 
-@       IN      NS      ns.memo.com.
+@       IN      NS      ns.abonazel.com.
 @       IN      A       1.1.1.1
 ns      IN      A       1.1.1.1
 www     IN      A       1.1.1.1
