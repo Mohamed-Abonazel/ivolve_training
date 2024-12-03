@@ -23,10 +23,9 @@ sudo parted -s /dev/xvdf set 3 lvm on
 ```
 ## 3. Create filesystem on first partition:
 Purpose of Mounting:
-
-     *Makes the filesystem accessible in the Linux directory tree
-     *Allows users and applications to read/write files
-     *Integrates the new storage into the existing file hierarchy
+    # Makes the filesystem accessible in the Linux directory tree
+    # Allows users and applications to read/write files
+    # Integrates the new storage into the existing file hierarchy
 
 Think of it like this:
 
