@@ -24,15 +24,15 @@ sudo parted -s /dev/xvdf set 3 lvm on
 ## 3. Create filesystem on first partition:
 Purpose of Mounting:
 
-    1. Makes the filesystem accessible in the Linux directory tree
-    2. Allows users and applications to read/write files
-    3. Integrates the new storage into the existing file hierarchy
+1. Makes the filesystem accessible in the Linux directory tree
+2. Allows users and applications to read/write files
+3. Integrates the new storage into the existing file hierarchy
 
 Think of it like this:
 
-    1. A filesystem is like a book with content
-    2. Mount point is like a shelf in your library
-    3. Mounting is placing the book (filesystem) on a specific shelf (directory)
+1. A filesystem is like a book with content
+2. Mount point is like a shelf in your library
+3. Mounting is placing the book (filesystem) on a specific shelf (directory)
     
 ```bash
 # Create ext4 filesystem
