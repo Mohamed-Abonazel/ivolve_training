@@ -26,7 +26,14 @@
    test ALL=NOPASSWD: /usr/bin/apt-get install nginx, /usr/sbin/service nginx *
 
 ```
-## 5. Install Nginx as **test** user
+## 5.Swith to test user
+```bash
+   su test
+
+```
+
+
+## 6. Install Nginx as **test** user
 ```bash
    sudo -i -u test
    sudo apt-get install nginx
