@@ -6,6 +6,7 @@
 4. Configure the test user to install and manage Nginx without being prompted for a sudo password.
 ## Steps
 ## 1. Create the test user
-'''bash
+...
 ls
+...
  
