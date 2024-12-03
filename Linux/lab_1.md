@@ -23,7 +23,7 @@
 ## 4. Modify sudoers file to allow passwordless Nginx installation
 ```bash
    sudo visudo
-test ALL=NOPASSWD: /usr/bin/apt-get install nginx, /usr/sbin/service nginx *
+   test ALL=NOPASSWD: /usr/bin/apt-get install nginx, /usr/sbin/service nginx *
 
 ```
 ## 5. Install Nginx as **test** user
