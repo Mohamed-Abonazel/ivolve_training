@@ -5,8 +5,8 @@
 3. Add the **test** user to the **ivolve** group.
 4. Configure the test user to install and manage Nginx without being prompted for a sudo password.
 ## Steps
-## 1.direct Create the test user
+## 1. Create the test user
 ```bash
-   ls my_director
+   sudo adduser test
 
 ```
