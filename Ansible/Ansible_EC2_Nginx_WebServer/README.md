@@ -25,7 +25,43 @@
 # ⚙️ Configuration
 ## Inventory Setup
 
+```bash
+[webserver]
+18.215.161.156
 
+```
 
 
 ## Ansible Configuration(ansible.cfg) 
+
+```bash
+[defaults]
+inventory = inventory
+remote_user = ec2-user
+host_key_checking = no 
+
+[priviliege_escalation]
+become = no
+become_user = root
+become_method = sudo
+become_ask_pass = no
+
+
+```
+# 📘 Usage
+# Step 1: Clone the Repository
+```bash
+git clone https://github.com/yourusername/Ansible_EC2_Apache_WebServer.git
+cd Ansible_EC2_Apache_WebServer
+
+```
+# Step 2: Update the inventory file with your EC2 hostnames/IPs
+# Step 3: Place Your EC2 Key Pair File
+# Step 4: Run the Playbook
+```bash
+ansible-playbook -i inventory webserver_setup.yml
+
+```
+
+
+
