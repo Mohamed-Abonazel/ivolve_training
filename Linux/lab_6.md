@@ -57,10 +57,10 @@ nano ~/.ssh/config
 
 # Add these lines
 Host ivolve
-    HostName remote_ip
-    User username
-    IdentityFile ~/.ssh/id_rsa
-    ServerAliveInterval 120
+HostName remote_ip
+User username
+IdentityFile ~/.ssh/id_rsa
+ServerAliveInterval 120
 ```
 ## 4. Set Proper Permissions:
 ```bash
