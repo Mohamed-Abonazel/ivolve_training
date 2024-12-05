@@ -1,1 +1,27 @@
+---
+- name: Simple Nginx Web Server Setup
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Nginx
+      yum:
+        name: nginx
+        state: present
+
+    - name: Start and enable Nginx service
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Create a custom index.html
+      copy:
+        dest: /usr/share/nginx/html/index.html
+        content: |
+          <html>
+          <head><title>Welcome</title></head>
+          <body>
+            <h1>Nginx Configured by Mohamed Abonnazel</h1>
+          </body>
+          </html>
 
