@@ -16,7 +16,7 @@ This README provides instructions for setting up an AWS account, configuring IAM
 ---
 
 ## 2. **Set Billing Alarm Using AWS Budgets**
-To avoid exceeding your budget, we'll use **AWS Budgets** instead of **CloudWatch** to set a billing alarm.
+To avoid exceeding your budget, we'll use **AWS Budgets** to set a billing alarm.
 
 1. Navigate to the **AWS Budgets** service:
    - In the **AWS Management Console**, type **"Budgets"** in the search bar and select **AWS Budgets**.
