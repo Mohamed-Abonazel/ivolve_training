@@ -24,7 +24,7 @@ To avoid exceeding your budget, we'll use **AWS Budgets** instead of **CloudWatc
 2. Create a new budget:
    - Click on **Create budget**.
    - Select **Cost budget** to monitor your spending.
-   - Choose the budget type (**Fixed** or **Cost forecast**) and set your budgeted amount (e.g., `$100` per month).
+   - Choose the budget type (**Fixed** or **Cost forecast**) and set your budgeted amount (e.g., `$1` per month).
 
 3. Configure the alert:
    - Set the **Alert threshold** to a percentage (e.g., 80%).
