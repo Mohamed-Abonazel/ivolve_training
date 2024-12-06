@@ -1,6 +1,6 @@
 # AWS Account Setup and IAM Configuration
 
-This README provides instructions for setting up an AWS account, configuring IAM groups and users, setting billing alarms, and testing permissions with different IAM users.
+This README provides instructions for setting up an AWS account, configuring IAM groups and users, setting billing alarms using **AWS Budgets**, and testing permissions with different IAM users.
 
 ## Prerequisites
 - An AWS account.
@@ -15,12 +15,24 @@ This README provides instructions for setting up an AWS account, configuring IAM
 
 ---
 
-## 2. **Set Billing Alarm**
-1. Navigate to **CloudWatch** in the AWS Management Console.
-2. Select **Alarms** > **Create Alarm**.
-3. Under **Select metric**, choose **Billing** and select **Total Estimated Charges**.
-4. Set a threshold (e.g., `$10`) and create an alarm.
-5. Configure **SNS notifications** to be alerted when the threshold is exceeded.
+## 2. **Set Billing Alarm Using AWS Budgets**
+To avoid exceeding your budget, we'll use **AWS Budgets** instead of **CloudWatch** to set a billing alarm.
+
+1. Navigate to the **AWS Budgets** service:
+   - In the **AWS Management Console**, type **"Budgets"** in the search bar and select **AWS Budgets**.
+   
+2. Create a new budget:
+   - Click on **Create budget**.
+   - Select **Cost budget** to monitor your spending.
+   - Choose the budget type (**Fixed** or **Cost forecast**) and set your budgeted amount (e.g., `$100` per month).
+
+3. Configure the alert:
+   - Set the **Alert threshold** to a percentage (e.g., 80%).
+   - Enter your **email address** or use **SNS** to get notified when the threshold is breached.
+
+4. Review and create your budget to set up the alarm.
+
+![Set Billing Alarm](screenshots/set_billing_alarm.png)
 
 ---
 
@@ -33,6 +45,8 @@ This README provides instructions for setting up an AWS account, configuring IAM
    - Name: `developer`
    - Attach the **AmazonEC2FullAccess** policy.
 
+![Create IAM Group](screenshots/create_iam_group.png)
+
 ---
 
 ## 4. **Create IAM Users**
@@ -44,6 +58,8 @@ This README provides instructions for setting up an AWS account, configuring IAM
 5. Enable **MFA** for `admin-1`:
    - Use a virtual MFA app (e.g., Google Authenticator).
    - Scan the QR code and enter the two MFA codes to confirm.
+
+![Create Admin-1 User](screenshots/create_admin_1_user.png)
 
 ### **Create `admin-2-prog` User (CLI Access Only)**
 1. Go to **IAM Console** > **Users** > **Add User**.
@@ -59,10 +75,11 @@ This README provides instructions for setting up an AWS account, configuring IAM
 4. Add `dev-user` to the **developer** group.
 5. Set a password for console access and download the programmatic credentials.
 
+![Create Dev-User](screenshots/create_dev_user.png)
+
 ---
 
 ## 5. **List IAM Users and Groups Using AWS CLI**
 1. **Configure AWS CLI** with the `admin-2-prog` user's credentials:
    ```bash
    aws configure
-
