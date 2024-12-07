@@ -7,7 +7,8 @@ This README provides instructions for setting up an AWS account, configuring IAM
 - AWS CLI installed and configured (optional for some tasks).
 - Administrative privileges on the AWS account.
 
----![Screenshot from 2024-12-07 01-56-48](https://github.com/user-attachments/assets/06414a41-4e4c-470b-93ad-42d4da178f18)
+---![Screenshot from 2024-12-06 23-18-48](https://github.com/user-attachments/assets/f844b5db-e85b-4302-9273-2d44e37c9591)
+
 
 
 ## 1. **Create AWS Account**
