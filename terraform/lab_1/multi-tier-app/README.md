@@ -1,199 +1,152 @@
-# Lab 19: Remote Backend and LifeCycle Rules
+# Terraform Project: Remote Backend, EC2, VPC, Security Groups, CloudWatch, and SNS Notifications
 
 ## Overview
-This lab demonstrates how to implement infrastructure as code (IaC) using **Terraform** with the following requirements:
+This project demonstrates the use of **Terraform** to provision AWS resources with the following components:
 
-1. **Infrastructure Components**:
-   - VPC
-   - Subnet
-   - EC2 instance with a Security Group
-   - Internet Gateway
-   - CloudWatch Integration
-   - SNS (Simple Notification Service) email notification (to Gmail)
-2. **Remote Backend**:
-   - Store the Terraform state file remotely in an S3 bucket.
-   - Use DynamoDB for state locking to avoid conflicts.
-3. **Lifecycle Rules**:
-   - Implement `create_before_destroy` lifecycle rule on the EC2 instance.
-   - Compare the behavior of different lifecycle rules.
-
-## Prerequisites
-Before starting this lab, ensure the following tools and services are set up:
-
-1. **AWS CLI** installed and configured with your credentials:
-   ```bash
-   aws configure
-   ```
-2. **Terraform** installed (v1.0 or above).
-3. **AWS Resources**:
-   - An S3 bucket for storing the remote Terraform state.
-   - A DynamoDB table for state locking.
-4. Basic knowledge of Terraform and AWS services.
+1. **Remote Backend**
+   - Store Terraform state files in an **S3 bucket**.
+   - Use **DynamoDB** for state locking.
+2. **Infrastructure Components**
+   - VPC and Subnet.
+   - EC2 Instance with lifecycle rules.
+   - Internet Gateway for internet access.
+   - Security Groups for SSH and HTTP access.
+3. **CloudWatch and SNS Integration**
+   - Monitor EC2 instance CPU usage.
+   - Send email notifications using **SNS** when CPU utilization exceeds 80%.
 
 ---
 
 ## Project Structure
-The lab is organized into the following files:
+The project files are organized as follows:
 
 ```plaintext
 .
-|-- main.tf                # Root Terraform configuration file
-|-- variables.tf           # Input variables definition
-|-- outputs.tf             # Output values
-|-- providers.tf           # Provider and backend configuration
-|-- ec2.tf                 # EC2 instance with lifecycle rules
-|-- network.tf             # VPC, Subnet, Internet Gateway
-|-- security_group.tf      # Security Group rules
-|-- cloudwatch_sns.tf      # CloudWatch and SNS configuration
-|-- terraform.tfvars       # Variable values
-|-- README.md              # Documentation for the lab
+|-- backend.tf            # S3 backend configuration
+|-- cloudwatch.tf         # CloudWatch Alarm for CPU utilization
+|-- ec2.tf                # EC2 instance creation with lifecycle rule
+|-- internet_gateway.tf   # Internet Gateway for VPC
+|-- outputs.tf            # Outputs for created resources
+|-- security_group.tf     # Security Group for SSH and HTTP access
+|-- sns.tf                # SNS Topic and email subscription
+|-- variables.tf          # Variables for resource configurations
+|-- vpc.tf                # VPC and Subnet configuration
+|-- README.md             # Project documentation
 ```
 
 ---
 
-## Steps to Implement the Lab
+## Prerequisites
+Before starting, ensure the following:
 
-### 1. Clone the Repository
-Clone the Terraform configuration files or create the above project structure in your directory:
+1. **AWS CLI** is installed and configured:
+   ```bash
+   aws configure
+   ```
+2. **Terraform** is installed (v1.0 or higher).
+3. An **S3 bucket** exists for storing Terraform state.
+4. A **DynamoDB table** is available for state locking.
+5. Replace placeholders like `bucket`, `ami_id`, and `sns_email` with your values.
 
-```bash
-git clone <repo-url>
-cd Lab19_Remote_Backend_Lifecycle
-```
+---
 
-### 2. Configure the Remote Backend
-In `providers.tf`, configure the **S3 bucket** for the backend and **DynamoDB** for state locking:
+## Steps to Deploy the Infrastructure
 
+### 1. Configure the S3 Backend
+Edit the `backend.tf` file and set the remote backend configuration:
 ```hcl
 terraform {
   backend "s3" {
-    bucket         = "your-terraform-state-bucket"
-    key            = "env:/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "terraform-state-lock"
-    encrypt        = true
+    bucket = "ivolve-s3"   # Replace with your S3 bucket name
+    key    = "terraform/state.tfstate"
+    region = "us-east-1"   # Replace with your AWS region
   }
 }
 ```
-- Replace `your-terraform-state-bucket` with your S3 bucket name.
-- Ensure the `dynamodb_table` exists.
+Ensure that your S3 bucket and DynamoDB table are already created.
 
-### 3. Initialize Terraform
+### 2. Initialize Terraform
 Run the following command to initialize the backend and download required providers:
-
 ```bash
 terraform init
 ```
 
-### 4. Apply the Configuration
-To create the infrastructure, execute:
-
+### 3. Apply the Configuration
+Deploy the resources with the following command:
 ```bash
 terraform apply
 ```
+This command will:
+- Create the VPC, Subnet, Security Group, and Internet Gateway.
+- Launch the EC2 instance.
+- Set up the CloudWatch Alarm and SNS notifications.
 
-- Terraform will store the state file in the remote S3 bucket.
-- You will see the resources being created in AWS.
+### 4. Verify Resources
+- **EC2 Instance**: Verify that the EC2 instance is running.
+- **Security Group**: Ensure SSH (port 22) and HTTP (port 80) access is allowed.
+- **CloudWatch Alarm**: Check the alarm under CloudWatch.
+- **SNS Email**: Confirm the subscription email in your Gmail inbox.
 
-### 5. Verify `create_before_destroy` Lifecycle Rule
-The EC2 instance has the `create_before_destroy` rule enabled in `ec2.tf`:
-
+### 5. Modify and Test Lifecycle Rules
+The EC2 instance in `ec2.tf` includes the `create_before_destroy` rule:
 ```hcl
-resource "aws_instance" "my_ec2" {
-  ami           = var.ami_id
-  instance_type = var.instance_type
-  subnet_id     = aws_subnet.my_subnet.id
-  security_groups = [aws_security_group.allow_ssh_http.name]
-
-  lifecycle {
-    create_before_destroy = true
-  }
+lifecycle {
+  create_before_destroy = true
 }
 ```
-
-- **Test**: Modify the instance type in `variables.tfvars`.
-- Run `terraform apply`.
-- Observe that Terraform creates a new EC2 instance **before** destroying the old one.
-
-### 6. Test SNS Email Notifications
-- Check your **Gmail inbox** to ensure SNS email notifications are working.
-- If you do not see an email, verify the SNS subscription status in the AWS Console.
-
-### 7. Compare Lifecycle Rules
-| Lifecycle Rule           | Description                                    |
-|--------------------------|------------------------------------------------|
-| `create_before_destroy`  | Creates a new resource before deleting the old one. |
-| `prevent_destroy`        | Prevents a resource from being destroyed.      |
-| `ignore_changes`         | Ignores specific changes in resource arguments.|
-
-To test other lifecycle rules:
-1. Replace `create_before_destroy` with other rules in the `ec2.tf` file.
-2. Re-run `terraform apply` and observe the behavior.
-
-### 8. Destroy the Infrastructure
-To clean up all resources:
-
-```bash
-terraform destroy
-```
-
-Ensure the **S3 bucket** and DynamoDB table remain intact, as they store your state file and lock information.
+- Modify the instance type in `variables.tf`.
+- Run `terraform apply` and observe that Terraform creates a new instance **before** deleting the old one.
 
 ---
 
-## Screenshots to Include
+## Outputs
+After successful deployment, Terraform will display the following outputs:
 
-1. **S3 State File**:
-   - Go to AWS Console → **S3** → Open the specified bucket.
-   - Verify the `terraform.tfstate` file is stored correctly.
+- **EC2 Public IP**:
+  ```bash
+  The public IP address of the EC2 instance
+  ```
+- **VPC ID**
+- **Subnet ID**
+- **SNS Topic ARN**
 
-2. **DynamoDB State Lock**:
-   - Go to AWS Console → **DynamoDB** → Table → Check the active state lock during apply.
-
-3. **EC2 Lifecycle Rule - `create_before_destroy`**:
-   - Update a resource and run `terraform apply`.
-   - Show Terraform creating a new resource before destroying the old one.
-
-4. **CloudWatch and SNS**:
-   - Verify CloudWatch alarms and received SNS emails.
-
-5. **Terraform Output**:
-   - Display the Terraform outputs after apply.
-
-6. **Destroy Confirmation**:
-   - Show Terraform output confirming resource deletion.
-
----
-
-## Verification Checklist
-Use the following checklist to verify the lab:
-
-1. ✅ State file is stored in the S3 bucket.
-2. ✅ DynamoDB table is used for state locking.
-3. ✅ EC2 instance is created with `create_before_destroy` lifecycle rule.
-4. ✅ VPC, Subnet, and Security Group are properly configured.
-5. ✅ CloudWatch is sending notifications via SNS to Gmail.
-6. ✅ Infrastructure can be destroyed without issues.
+These outputs are defined in `outputs.tf`.
 
 ---
 
 ## Clean Up
-After verifying the lab, ensure you clean up the resources to avoid unnecessary costs:
-
+To delete all resources and clean up, run:
 ```bash
 terraform destroy
 ```
+Ensure that the S3 bucket and DynamoDB table are preserved as they store the Terraform state.
+
+---
+
+## Important Screenshots to Include
+1. **S3 Bucket**:
+   - Verify the Terraform state file in the S3 bucket.
+2. **EC2 Instance**:
+   - Screenshot of the EC2 instance running in the AWS Console.
+3. **CloudWatch Alarm**:
+   - Screenshot showing the high CPU alarm under CloudWatch.
+4. **SNS Email Notification**:
+   - Screenshot of the email notification received in Gmail.
+5. **Terraform Apply Output**:
+   - Screenshot of the Terraform apply output in the terminal.
+6. **Security Group Rules**:
+   - Screenshot showing inbound rules for SSH (22) and HTTP (80).
 
 ---
 
 ## Notes
-- Always use version-controlled Terraform configurations.
-- Ensure IAM roles have sufficient permissions to manage S3, DynamoDB, EC2, and other AWS resources.
+- Always use **IAM roles** with least privilege when deploying AWS resources.
+- Enable version control (e.g., Git) to track changes in Terraform configurations.
+- Test lifecycle rules to understand their behavior (e.g., `create_before_destroy`, `prevent_destroy`).
 
 ---
 
 ## References
-- [Terraform Documentation](https://www.terraform.io/docs)
-- [AWS S3 Backend](https://www.terraform.io/language/settings/backends/s3)
-- [Terraform Lifecycle Rules](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle)
-
+- [Terraform Documentation](https://developer.hashicorp.com/terraform/docs)
+- [AWS CloudWatch Alarms](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html)
+- [AWS SNS Notifications](https://docs.aws.amazon.com/sns/latest/dg/sns-getting-started.html)
