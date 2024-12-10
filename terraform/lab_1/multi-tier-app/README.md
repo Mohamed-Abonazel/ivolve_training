@@ -5,7 +5,7 @@ This project demonstrates the use of **Terraform** to provision AWS resources wi
 
 1. **Remote Backend**
    - Store Terraform state files in an **S3 bucket**.
-   - Use **DynamoDB** for state locking.
+   - 
 2. **Infrastructure Components**
    - VPC and Subnet.
    - EC2 Instance with lifecycle rules.
