@@ -1,165 +1,198 @@
-# Terraform Project: Remote Backend, EC2, VPC, Security Groups, CloudWatch, and SNS Notifications
+# Lab 1: Multi-Tier Application Deployment with Terraform
 
-## Overview
-This project demonstrates the use of **Terraform** to provision AWS resources with the following components:
+## Objective
+The goal of this lab is to deploy a **multi-tier application architecture** on AWS using Terraform. The architecture includes a VPC, two subnets (application and database), an EC2 instance (application server), and an RDS instance (database server). Additionally, we use a **local provisioner** to save the EC2 instance's public IP to a file.
 
-1. **Remote Backend**
-   - Store Terraform state files in an **S3 bucket**.
-   - 
-2. **Infrastructure Components**
-   - VPC and Subnet.
-   - EC2 Instance with lifecycle rules.
-   - Internet Gateway for internet access.
-   - Security Groups for SSH and HTTP access.
-3. **CloudWatch and SNS Integration**
-   - Monitor EC2 instance CPU usage.
-   - Send email notifications using **SNS** when CPU utilization exceeds 80%.
+## Lab Requirements
+1. **AWS Account** with appropriate permissions.
+2. **Terraform** installed on your local machine.
+3. **Basic knowledge** of Terraform and AWS resources.
 
----
+## Architecture Overview
+The architecture deployed in this lab consists of:
+- **VPC**: Created manually in AWS (Name: `ivolve`), and its ID is retrieved using Terraform's Data Block.
+- **Subnets**:
+  - Application Subnet: To host the EC2 instance (app server).
+  - Database Subnet: To host the RDS instance (database server).
+- **EC2 Instance**:
+  - Acts as the application server.
+  - The public IP of the instance is written to a file `ec2-ip.txt` using the **local-exec provisioner**.
+- **RDS Instance**:
+  - Acts as the database backend.
+  - Uses a **DB Subnet Group** to ensure it runs in the database subnet.
 
-## Project Structure
-The project files are organized as follows:
+## Steps to Deploy the Lab
 
+### Step 1: Create the VPC Manually
+1. Log in to your **AWS Management Console**.
+2. Go to **VPC Dashboard** > **Create VPC**.
+3. Create a VPC with the following details:
+   - **Name**: `ivolve`
+   - **CIDR Block**: `10.0.0.0/16`
+4. Note the VPC ID for reference.
+
+### Step 2: Terraform Configuration
+
+#### 2.1. File Structure
+Organize the Terraform files as follows:
 ```plaintext
 .
-|-- backend.tf            # S3 backend configuration
-|-- cloudwatch.tf         # CloudWatch Alarm for CPU utilization
-|-- ec2.tf                # EC2 instance creation with lifecycle rule
-|-- internet_gateway.tf   # Internet Gateway for VPC
-|-- outputs.tf            # Outputs for created resources
-|-- security_group.tf     # Security Group for SSH and HTTP access
-|-- sns.tf                # SNS Topic and email subscription
-|-- variables.tf          # Variables for resource configurations
-|-- vpc.tf                # VPC and Subnet configuration
-|-- README.md             # Project documentation
+|-- main.tf         # Main configuration for resources
+|-- variables.tf    # Input variables
+|-- outputs.tf      # Output values
+|-- provider.tf     # AWS provider configuration
+|-- ec2-ip.txt      # Local file to store EC2 public IP (generated after apply)
 ```
 
----
-
-## Prerequisites
-Before starting, ensure the following:
-
-1. **AWS CLI** is installed and configured:
-   ```bash
-   aws configure
-   ```
-2. **Terraform** is installed (v1.0 or higher).
-3. An **S3 bucket** exists for storing Terraform state.
-4. Replace placeholders like `bucket`, `ami_id`, and `sns_email` with your values.
-
----
-
-## Steps to Deploy the Infrastructure
-
-### 1. Configure the S3 Backend
-Edit the `backend.tf` file and set the remote backend configuration:
+#### 2.2. `provider.tf`
+Configure the Terraform provider for AWS:
 ```hcl
-terraform {
-  backend "s3" {
-    bucket = "ivolve-s3"   # Replace with your S3 bucket name
-    key    = "terraform/state.tfstate"
-    region = "us-east-1"   # Replace with your AWS region
+provider "aws" {
+  region = "us-east-1" # Change this to your desired region
+}
+```
+
+#### 2.3. `main.tf`
+Define the main resources:
+
+```hcl
+# Data Block to fetch the existing VPC ID
+data "aws_vpc" "ivolve_vpc" {
+  filter {
+    name   = "tag:Name"
+    values = ["ivolve"]
+  }
+}
+
+# Create Subnets
+resource "aws_subnet" "app_subnet" {
+  vpc_id            = data.aws_vpc.ivolve_vpc.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "us-east-1a"
+  tags = {
+    Name = "App-Subnet"
+  }
+}
+
+resource "aws_subnet" "db_subnet" {
+  vpc_id            = data.aws_vpc.ivolve_vpc.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "us-east-1b"
+  tags = {
+    Name = "DB-Subnet"
+  }
+}
+
+# EC2 Instance
+resource "aws_instance" "app_server" {
+  ami           = "ami-0e2c8caa4b6378d8c" # Replace with a valid AMI ID
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.app_subnet.id
+
+  tags = {
+    Name = "App-Server"
+  }
+
+  # Local provisioner to write EC2 public IP to a file
+  provisioner "local-exec" {
+    command = "echo ${self.public_ip} > ec2-ip.txt"
+  }
+}
+
+# DB Subnet Group
+resource "aws_db_subnet_group" "db_subnet_group" {
+  name       = "db-subnet-group"
+  subnet_ids = [aws_subnet.db_subnet.id]
+
+  tags = {
+    Name = "DB-Subnet-Group"
+  }
+}
+
+# RDS Instance
+resource "aws_db_instance" "db_instance" {
+  allocated_storage       = 20
+  engine                  = "mysql"
+  engine_version          = "8.0.35"
+  instance_class          = "db.t2.micro"
+  db_name                 = "ivolvedb"
+  username                = "admin"
+  password                = "password123"
+  db_subnet_group_name    = aws_db_subnet_group.db_subnet_group.name
+  skip_final_snapshot     = true
+
+  tags = {
+    Name = "DB-Instance"
   }
 }
 ```
-Ensure that your S3 bucket and DynamoDB table are already created.
 
-### 2. Initialize Terraform
-Run the following command to initialize the backend and download required providers:
-```bash
-terraform init
-```
-
-### 3. Apply the Configuration
-Deploy the resources with the following command:
-```bash
-terraform apply
-```
-This command will:
-- Create the VPC, Subnet, Security Group, and Internet Gateway.
-- Launch the EC2 instance.
-- Set up the CloudWatch Alarm and SNS notifications.
-
-### 4. Verify Resources
-- **EC2 Instance**: Verify that the EC2 instance is running.
-- **Security Group**: Ensure SSH (port 22) and HTTP (port 80) access is allowed.
-- **CloudWatch Alarm**: Check the alarm under CloudWatch.
-- **SNS Email**: Confirm the subscription email in your Gmail inbox.
-
-### 5. Modify and Test Lifecycle Rules
-The EC2 instance in `ec2.tf` includes the `create_before_destroy` rule:
+#### 2.4. `variables.tf`
+Define input variables:
 ```hcl
-lifecycle {
-  create_before_destroy = true
+variable "region" {
+  description = "AWS region to deploy resources"
+  default     = "us-east-1"
 }
 ```
-- Modify the instance type in `variables.tf`.
-- Run `terraform apply` and observe that Terraform creates a new instance **before** deleting the old one.
 
----
+#### 2.5. `outputs.tf`
+Output key details after deployment:
+```hcl
+output "ec2_public_ip" {
+  description = "The public IP of the EC2 instance"
+  value       = aws_instance.app_server.public_ip
+}
 
-## Outputs
-After successful deployment, Terraform will display the following outputs:
+output "rds_endpoint" {
+  description = "The endpoint of the RDS instance"
+  value       = aws_db_instance.db_instance.endpoint
+}
+```
 
-- **EC2 Public IP**:
-  ```bash
-  The public IP address of the EC2 instance
-  ```
-- **VPC ID**
-- **Subnet ID**
-- **SNS Topic ARN**
+### Step 3: Deploy the Infrastructure
+1. **Initialize Terraform**:
+   ```bash
+   terraform init
+   ```
+2. **Plan the Deployment**:
+   ```bash
+   terraform plan
+   ```
+3. **Apply the Configuration**:
+   ```bash
+   terraform apply
+   ```
+   Confirm the deployment by typing `yes`.
 
-These outputs are defined in `outputs.tf`.
+### Step 4: Verify the Outputs
+After deployment, Terraform will output the following:
+- **EC2 Public IP**: Public IP address of the EC2 instance.
+- **RDS Endpoint**: Endpoint URL of the RDS database.
 
----
+You can also check the `ec2-ip.txt` file on your local machine for the EC2 instance's public IP.
 
-## Clean Up
-To delete all resources and clean up, run:
+### Step 5: Clean Up Resources
+To delete all resources created by Terraform, run:
 ```bash
 terraform destroy
 ```
-Ensure that the S3 bucket and DynamoDB table are preserved as they store the Terraform state.
+Confirm the destruction by typing `yes`.
 
----
-
-## Important Screenshots to Include
-1. **S3 Bucket**:
-   - Verify the Terraform state file in the S3 bucket.
-![Screenshot from 2024-12-11 01-54-45](https://github.com/user-attachments/assets/14b4fb70-a855-4e5a-b3ca-3bc75f226a37)
-
-2. **EC2 Instance**:
-   - Screenshot of the EC2 instance running in the AWS Consol
-![Screenshot from 2024-12-11 01-57-57](https://github.com/user-attachments/assets/d8e4ec7c-0824-466d-a8da-9010e1eadcb3)
-
-3. **CloudWatch Alarm**:
-   - Screenshot showing the high CPU alarm under CloudWatch.
-![Screenshot from 2024-12-11 02-00-24](https://github.com/user-attachments/assets/b6c07e8b-2c31-4294-a55c-d864b91eae38)
-
-4. **SNS Email Notification**:
-   - Screenshot of the email notification received in Gmail.
-![image](https://github.com/user-attachments/assets/76a5d269-73b3-4ef2-aeb5-e090c632a01e)
-
-5. **Terraform Apply Output**:
-   - Screenshot of the Terraform apply output in the terminal.
-![image](https://github.com/user-attachments/assets/3df134d6-247e-444a-9e54-95d5acc3318e)
-
-6. **Security Group Rules**:
-   - Screenshot showing inbound rules for SSH (22) and HTTP (80).
-![Screenshot from 2024-12-11 01-58-43](https://github.com/user-attachments/assets/233b5459-938d-4ceb-8cbd-69cae9570d03)
-![Screenshot from 2024-12-11 02-16-24](https://github.com/user-attachments/assets/a1051c31-66e3-4136-a599-43a7a6dd7c11)
-
-
-
----
+## Lab Outcomes
+By the end of this lab, you will:
+1. Understand how to retrieve manually created AWS resources (e.g., VPC) using Terraform's **data blocks**.
+2. Deploy a **multi-tier architecture** with EC2 and RDS using Terraform.
+3. Use **local-exec provisioners** to interact with local files.
+4. Output critical information (e.g., EC2 IP, RDS Endpoint) for verification.
 
 ## Notes
-- Always use **IAM roles** with least privilege when deploying AWS resources.
-- Enable version control (e.g., Git) to track changes in Terraform configurations.
-- Test lifecycle rules to understand their behavior (e.g., `create_before_destroy`, `prevent_destroy`).
+- Replace the AMI ID with one suitable for your AWS region.
+- Ensure you have the correct permissions for creating EC2 and RDS resources.
+
+## Diagram (Optional)
+If needed, draw a basic diagram showing the VPC, subnets, EC2 instance, and RDS database placement.
 
 ---
 
-## References
-- [Terraform Documentation](https://developer.hashicorp.com/terraform/docs)
-- [AWS CloudWatch Alarms](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html)
-- [AWS SNS Notifications](https://docs.aws.amazon.com/sns/latest/dg/sns-getting-started.html)
+**Congratulations! You have successfully deployed a multi-tier application architecture using Terraform.**
