@@ -45,8 +45,7 @@ Before starting, ensure the following:
    ```
 2. **Terraform** is installed (v1.0 or higher).
 3. An **S3 bucket** exists for storing Terraform state.
-4. A **DynamoDB table** is available for state locking.
-5. Replace placeholders like `bucket`, `ami_id`, and `sns_email` with your values.
+4. Replace placeholders like `bucket`, `ami_id`, and `sns_email` with your values.
 
 ---
 
@@ -126,16 +125,30 @@ Ensure that the S3 bucket and DynamoDB table are preserved as they store the Ter
 ## Important Screenshots to Include
 1. **S3 Bucket**:
    - Verify the Terraform state file in the S3 bucket.
+![Screenshot from 2024-12-11 01-54-45](https://github.com/user-attachments/assets/14b4fb70-a855-4e5a-b3ca-3bc75f226a37)
+
 2. **EC2 Instance**:
-   - Screenshot of the EC2 instance running in the AWS Console.
+   - Screenshot of the EC2 instance running in the AWS Consol
+![Screenshot from 2024-12-11 01-57-57](https://github.com/user-attachments/assets/d8e4ec7c-0824-466d-a8da-9010e1eadcb3)
+
 3. **CloudWatch Alarm**:
    - Screenshot showing the high CPU alarm under CloudWatch.
+![Screenshot from 2024-12-11 02-00-24](https://github.com/user-attachments/assets/b6c07e8b-2c31-4294-a55c-d864b91eae38)
+
 4. **SNS Email Notification**:
    - Screenshot of the email notification received in Gmail.
+![image](https://github.com/user-attachments/assets/76a5d269-73b3-4ef2-aeb5-e090c632a01e)
+
 5. **Terraform Apply Output**:
    - Screenshot of the Terraform apply output in the terminal.
+![image](https://github.com/user-attachments/assets/3df134d6-247e-444a-9e54-95d5acc3318e)
+
 6. **Security Group Rules**:
    - Screenshot showing inbound rules for SSH (22) and HTTP (80).
+![Screenshot from 2024-12-11 01-58-43](https://github.com/user-attachments/assets/233b5459-938d-4ceb-8cbd-69cae9570d03)
+![Screenshot from 2024-12-11 02-16-24](https://github.com/user-attachments/assets/a1051c31-66e3-4136-a599-43a7a6dd7c11)
+
+
 
 ---
 
