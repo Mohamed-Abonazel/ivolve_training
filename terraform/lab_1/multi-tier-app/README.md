@@ -37,7 +37,10 @@ The architecture deployed in this lab consists of:
 Organize the Terraform files as follows:
 ```plaintext
 .
-|-- main.tf         # Main configuration for resources
+|-- ec2.tf          # ec2 configuration for resources
+|-- rds.tf          # rds configuration for resources
+|-- terraform.tfvars
+|-- vpc.tf          # vpc configuration for resources
 |-- variables.tf    # Input variables
 |-- outputs.tf      # Output values
 |-- provider.tf     # AWS provider configuration
